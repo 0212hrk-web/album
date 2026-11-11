@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<link rel="icon" href="data:,">
+<title>自分専用アルバム ブラウザ版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brick:#7a2e22; --brick2:#8f3d2b; --mortar:#d8c9b8;
+  --ink:#1e1a17; --paper:#fffaf0; --gold:#c9a86a; --gold2:#8a6d2b;
+  --wall-shadow:0 18px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans JP",sans-serif;background:#181210;color:#fff;-webkit-tap-highlight-color:transparent}
+a{color:inherit}
+.topbar{background:#fffaf0;color:#1e1a17;border-bottom:4px solid #1e1a17;padding:14px 16px 12px;position:sticky;top:0;z-index:20}
+.topbar-inner{max-width:1180px;margin:0 auto}
+.eyebrow{font-size:11px;letter-spacing:.22em;font-weight:700;color:#8a6d2b}
+h1{font-family:"Noto Serif JP",serif;font-size:28px;line-height:1;margin:4px 0 2px;letter-spacing:.02em}
+.sub{font-size:13px;color:#6b5e52;line-height:1.5}
+.placebar{display:flex;gap:8px;align-items:center;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
+.placebar::-webkit-scrollbar{display:none}
+.place-tab{flex:0 0 auto;border:2px solid #1e1a17;background:#fff;padding:8px 14px;border-radius:999px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px}
+.place-tab.active{background:#1e1a17;color:#fff}
+.add-place{flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:#c0392b;color:#fff;border:2px solid #1e1a17;font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;font-weight:700}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{border:2px solid #1e1a17;background:#fff;color:#1e1a17;padding:9px 14px;border-radius:999px;font-weight:700;font-size:13px;cursor:pointer}
+.btn.primary{background:#1e1a17;color:#fff}
+.btn.gold{background:#c9a86a}
+.btn.danger{background:#fff;color:#b91c1c;border-color:#b91c1c}
+.btn.small{padding:6px 10px;font-size:12px}
+.toolbar{max-width:1180px;margin:0 auto;padding:14px 16px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.paste-box{background:#fffaf0;color:#1e1a17;border:2px dashed #1e1a17;border-radius:14px;padding:14px;display:flex;gap:12px;align-items:flex-start;flex:1;min-width:0;width:100%}
+.paste-text{flex:1;min-width:0}
+.paste-actions{display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
+@media(max-width:640px){.paste-box{flex-direction:column}.paste-actions{width:100%}.paste-actions .btn{flex:1;text-align:center}}
+.paste-box strong{font-size:14px}
+.paste-box span{font-size:12px;color:#6b5e52;display:block;line-height:1.4}
+.paste-zone{background:#fffaf0;color:#1e1a17;border:2px solid #1e1a17;border-radius:14px;padding:14px;width:100%}
+.paste-zone .pz-label{font-size:14px;font-weight:700;display:block;margin-bottom:4px}
+.paste-zone .pz-steps{font-size:12px;color:#6b5e52;display:block;line-height:1.5;margin-bottom:10px}
+.paste-target{min-height:84px;border:2px dashed #b3892f;border-radius:10px;background:#fff;padding:12px;font-size:16px;color:#1e1a17;outline:none;-webkit-user-select:text;user-select:text;overflow:auto;-webkit-tap-highlight-color:rgba(201,168,106,.35)}
+.paste-target:focus{border-style:solid;box-shadow:0 0 0 3px #ffe9a8}
+.paste-target:empty:before{content:attr(data-ph);color:#8a7a68;font-size:14px;pointer-events:none}
+.paste-target img{max-width:120px;max-height:90px}
+.wall-wrap{max-width:1180px;margin:14px auto 0;padding:0 12px 40px}
+.wall{
+  border-radius:18px; padding:28px 18px 36px; min-height:520px; position:relative; overflow:hidden;
+  background:
+    linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.28)),
+    repeating-linear-gradient(0deg, transparent 0 30px, rgba(255,235,200,.55) 30px 33px),
+    repeating-linear-gradient(90deg, #8a3526 0 72px, #e6d5bd 72px 76px, #7c2e20 76px 148px, #e6d5bd 148px 152px);
+  background-color:#7a2e22;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.4), inset 0 20px 60px rgba(0,0,0,.45);
+}
+.wall:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%, rgba(255,230,160,.28), transparent 55%);pointer-events:none}
+.wall-head{position:relative;text-align:center;margin-bottom:22px}
+.wall-head .name{font-family:"Cormorant Garamond",serif;letter-spacing:.28em;font-size:13px;color:#ffe9a8;text-transform:uppercase}
+.wall-head h2{font-family:"Noto Serif JP",serif;font-size:26px;margin:6px 0 4px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+.wall-head p{margin:0;font-size:12px;color:rgba(255,255,255,.82)}
+.grid{position:relative;display:grid;grid-template-columns:repeat(2,1fr);gap:22px 16px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr);gap:28px 22px}}
+@media(min-width:1000px){.grid{grid-template-columns:repeat(4,1fr)}}
+.frame-card{position:relative}
+.spot{height:18px;display:flex;justify-content:center}
+.spot i{width:54px;height:8px;border-radius:999px;background:radial-gradient(ellipse, rgba(255,236,170,.9), transparent 70%);display:block}
+.frame{position:relative;padding:10px;background:#111;border-radius:4px;box-shadow:var(--wall-shadow);cursor:pointer;transition:transform .15s}
+.frame:hover{transform:translateY(-2px)}
+.frame.gold{background:linear-gradient(135deg,#f3d98b,#b8913a,#e8c96a);padding:11px}
+.frame.wood{background:linear-gradient(135deg,#7a4a22,#4e2e14,#6b3f1c);padding:11px}
+.frame.black{background:#111;padding:10px;border:1px solid #333}
+.frame.white{background:#f8f5ef;padding:10px;border:1px solid #ddd}
+.frame .mat{background:#fffef8;padding:8px}
+.frame img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#ddd}
+.plate{margin:10px auto 0;background:#fffaf0;color:#1e1a17;border:1px solid #d9c8a8;padding:7px 10px;max-width:92%;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,.25)}
+.plate b{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plate span{font-size:10px;letter-spacing:.14em;color:#8a6d2b;font-weight:700}
+.del-x{position:absolute;top:-8px;right:-6px;width:28px;height:28px;border-radius:50%;background:#fff;color:#111;border:2px solid #111;font-weight:900;cursor:pointer;z-index:2;display:grid;place-items:center}
+.empty{position:relative;text-align:center;padding:48px 16px;color:#fff}
+.empty .big{font-size:42px}
+.empty h3{font-family:"Noto Serif JP",serif;font-size:20px;margin:10px 0 6px}
+.empty p{font-size:13px;line-height:1.7;color:rgba(255,255,255,.88);max-width:520px;margin:0 auto}
+
+/* modals */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;display:none;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.modal{background:#fffaf0;color:#1e1a17;width:100%;max-width:480px;border-radius:16px;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.modal h3{margin:0 0 8px;font-family:"Noto Serif JP",serif}
+.modal p{font-size:13px;line-height:1.6;color:#5c4f43}
+.modal .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.modal label{font-size:12px;font-weight:700;letter-spacing:.06em}
+.modal input[type=text]{width:100%;padding:11px;border:2px solid #1e1a17;border-radius:10px;font-size:15px;margin-top:6px}
+/* lightbox */
+.lightbox{position:fixed;inset:0;background:#0a0908;z-index:60;display:none;flex-direction:column}
+.lightbox.open{display:flex}
+.lb-top{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;color:#fff}
+.lb-top button{background:#fff;border:0;padding:8px 12px;border-radius:999px;font-weight:700;cursor:pointer}
+.lb-main{flex:1;display:flex;align-items:center;justify-content:center;padding:8px 12px;position:relative}
+.lb-main img{max-width:100%;max-height:80vh;object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,.6);border:10px solid #fff;background:#fff}
+.navbtn{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:#fff;font-size:20px;cursor:pointer}
+.lb-top button.active{background:#c9a86a;color:#111}
+.lb-edit-panel{background:#fffaf0;color:#1e1a17;padding:14px;border-top:4px solid #111;display:none}
+.lb-edit-panel.open{display:block}
+.lb-bottom-inner{max-width:760px;margin:0 auto}
+.lb-edit-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.lb-edit-head span{font-size:11px;font-weight:700;letter-spacing:.12em;color:#8a6d2b}
+.lb-edit-done{border:2px solid #111;background:#111;color:#fff;padding:7px 14px;border-radius:999px;font-weight:700;font-size:12px;cursor:pointer}
+.frame-choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.chip{border:2px solid #111;background:#fff;padding:7px 11px;border-radius:999px;font-weight:700;font-size:12px;cursor:pointer}
+.chip.active{background:#111;color:#fff}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#111;color:#fff;padding:11px 16px;border-radius:18px;font-size:13px;font-weight:700;z-index:80;display:none;box-shadow:0 10px 24px rgba(0,0,0,.3);width:max-content;max-width:92vw;text-align:center;line-height:1.5}
+.hint{font-size:11px;color:#8a7a68}
+/* lock screen (PIN) */
+.lockscreen{position:fixed;inset:0;z-index:100;background:#181210 radial-gradient(ellipse at 50% 0%, rgba(255,230,160,.14), transparent 60%);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+.lockscreen.hidden{display:none}
+.lock-card{background:#fffaf0;color:#1e1a17;border-radius:18px;padding:28px 22px;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5);border-top:6px solid #c9a86a}
+.lock-eyebrow{font-size:11px;letter-spacing:.22em;font-weight:700;color:#8a6d2b}
+.lock-title{font-family:"Noto Serif JP",serif;font-size:22px;margin:8px 0 6px}
+.lock-msg{font-size:13px;line-height:1.7;color:#5c4f43;margin:0 0 16px;text-align:left}
+.pin-input{width:100%;font-size:26px;letter-spacing:.45em;text-align:center;padding:12px 4px 12px calc(4px + .22em);border:2px solid #1e1a17;border-radius:12px;background:#fff;color:#1e1a17;outline:none}
+.pin-input:focus{box-shadow:0 0 0 3px #ffe9a8}
+.lock-error{color:#b91c1c;font-size:13px;font-weight:700;min-height:20px;margin:10px 0 0}
+.lock-btn{width:100%;margin-top:12px;padding:13px;font-size:15px}
+.lock-btn:disabled{opacity:.4;cursor:not-allowed}
+.lock-reset{margin-top:18px;background:none;border:0;color:#8a6d2b;font-size:12px;text-decoration:underline;cursor:pointer;display:none;padding:4px}
+.lock-reset.show{display:inline-block}
+.sec-bar{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-top:10px;padding:9px 12px;background:#111;color:#ffe9a8;border-radius:10px;font-size:11px;line-height:1.6}
+.sec-bar b{color:#fff}
+.lockout-note{color:#b91c1c;font-size:12px;font-weight:700;line-height:1.6}
+.privacy-veil{position:fixed;inset:0;z-index:90;background:#181210;color:#fffaf0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px}
+.privacy-veil.show{display:flex}
+.reset-list{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.8;color:#5c4f43}
+.reset-word{width:100%;padding:11px;border:2px solid #b91c1c;border-radius:10px;font-size:16px;margin-top:6px;text-align:center;letter-spacing:.1em}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="eyebrow">PRIVATE EXHIBITION</div>
+    <h1>自分専用アルバム</h1>
+    <p class="sub">レンガの壁に、額縁の写真を1枚ずつ飾る小さな展示会。写真をタップすると全画面で見られます。</p>
+    <div class="placebar" id="placeBar"></div>
+    <div class="sec-bar" id="secBar"><span>🔒 <b>自動ロック</b>：操作なし3分／画面を離れて30秒で自動ロック</span><span>🛡️ <b>不正ログイン対策</b>：PINを5回間違えると一時ロック</span><span>👁️ <b>履歴対策</b>：写真はURL・ブラウザ履歴に残りません</span></div>
+    <div class="actions">
+      <button class="btn small" id="renamePlaceBtn">名前を変更</button>
+      <button class="btn small danger" id="deletePlaceBtn">このPLACEを削除</button>
+      <button class="btn small danger" id="resetPlaceBtn">このPLACEをリセット</button>
+      <button class="btn small gold" id="lockBtn">🔒 ロックする</button>
+      <button class="btn small danger" id="fullResetBtn">すべてリセット</button>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="paste-box" id="dropZone">
+    <div class="paste-text">
+      <strong>🖼️ 写真を貼る</strong>
+      <span>iPhone：写真をコピーして、下の「ここに貼る」枠を<b>長押し→「ペースト」</b>。パソコン：<b>Ctrl+V / ⌘V</b>。写真ライブラリから選んだり、ドラッグ＆ドロップでも追加できます。</span>
+    </div>
+    <div class="paste-actions">
+      <label class="btn" for="fileInput" style="cursor:pointer;text-align:center">写真ライブラリから選ぶ</label>
+      <input id="fileInput" type="file" accept="image/*" multiple hidden>
+    </div>
+  </div>
+  <div class="paste-zone">
+    <span class="pz-label">ここに貼る（iPhoneはこの枠を長押し）</span>
+    <span class="pz-steps">手順：①写真アプリなどで写真を長押しして「コピー」　②この枠をタップ　③枠を長押しして「ペースト」を選ぶ。貼れたら自動で額縁に飾られます。うまく貼れないときは、上の「写真ライブラリから選ぶ」からも同じように追加できます。</span>
+    <div id="pasteTarget" class="paste-target" contenteditable="true" role="textbox" aria-label="画像の貼り付け枠" data-ph="タップして、長押し →「ペースト」"></div>
+  </div>
+</div>
+
+<main class="wall-wrap">
+  <section class="wall" id="wall">
+    <div class="wall-head">
+      <div class="name" id="wallKicker">PLACE 1</div>
+      <h2 id="wallTitle">PLACE 1</h2>
+      <p id="wallCount">0点 展示中</p>
+    </div>
+    <div id="wallContent"></div>
+  </section>
+  <p class="hint" style="text-align:center;margin-top:12px">額縁の × から1枚ずつ削除できます（確認画面が出ます）。全画面では右上の「編集」からタイトル変更・額縁変更ができます。<br>写真はこの端末の中に、パスワードで暗号化して保存されます。再読み込みしても残りますが、別の端末・別のブラウザでは開けません。パスワードを忘れると復元できません。<br>離席時は自動でロックされます。ブラウザの履歴には写真そのものは残らず、このページを開いた記録だけが残ります。履歴自体を残したくない場合は、ブラウザのプライベートモードでの利用と併せてご確認ください（ただしプライベートモードでは端末内保存が消える場合があります）。</p>
+</main>
+
+<!-- Add Place Modal -->
+<div class="overlay" id="addPlaceOverlay">
+  <div class="modal">
+    <h3>新しい展示場所を作る</h3>
+    <p>PLACEの名前を入力してください。作ったPLACEはタブをタップすればそのまま開けます。</p>
+    <label>PLACE名</label>
+    <input type="text" id="newPlaceName" placeholder="例：PLACE 3">
+    <div class="row">
+      <button class="btn primary" id="confirmAddPlace">作成する</button>
+      <button class="btn" data-close="addPlaceOverlay">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="overlay" id="deleteOverlay">
+  <div class="modal">
+    <h3>この写真を削除しますか？</h3>
+    <p>削除すると元に戻せません。</p>
+    <img id="deleteThumb" style="width:100%;max-height:240px;object-fit:cover;border-radius:10px;border:2px solid #111" alt="">
+    <p id="deleteTitle" style="font-weight:700;color:#111"></p>
+    <div class="row">
+      <button class="btn danger" id="confirmDeleteBtn" style="background:#b91c1c;color:#fff;border-color:#b91c1c">削除する</button>
+      <button class="btn" data-close="deleteOverlay">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename -->
+<div class="overlay" id="renameOverlay">
+  <div class="modal">
+    <h3>PLACE名を変更</h3>
+    <label>新しい名前</label>
+    <input type="text" id="renameInput">
+    <div class="row">
+      <button class="btn primary" id="confirmRename">変更する</button>
+      <button class="btn" data-close="renameOverlay">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Place -->
+<div class="overlay" id="delPlaceOverlay">
+  <div class="modal">
+    <h3>このPLACEを削除しますか？</h3>
+    <p id="delPlaceText"></p>
+    <div class="row">
+      <button class="btn danger" id="confirmDelPlace" style="background:#b91c1c;color:#fff">PLACEを削除</button>
+      <button class="btn" data-close="delPlaceOverlay">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <div class="lb-top">
+    <span id="lbCounter" style="font-weight:700;letter-spacing:.08em"></span>
+    <div style="display:flex;gap:8px">
+      <button id="lbEdit">✎ 編集</button>
+      <button id="lbDelete">削除</button>
+      <button id="lbClose">✕ 閉じる</button>
+    </div>
+  </div>
+  <div class="lb-main">
+    <button class="navbtn" id="lbPrev" style="left:12px">‹</button>
+    <img id="lbImg" alt="全画面写真">
+    <button class="navbtn" id="lbNext" style="right:12px">›</button>
+  </div>
+  <div class="lb-edit-panel" id="lbEditPanel">
+    <div class="lb-bottom-inner">
+      <div class="lb-edit-head">
+        <span>編集モード</span>
+        <button class="lb-edit-done" id="lbEditDone">完了</button>
+      </div>
+      <label style="font-size:11px;font-weight:700;letter-spacing:.12em;color:#8a6d2b">展示プレート（タイトル）</label>
+      <input id="lbTitle" type="text" style="width:100%;margin-top:6px;padding:11px;border:2px solid #111;border-radius:10px;font-size:16px" placeholder="タイトルを入力">
+      <div style="margin-top:10px;font-size:11px;font-weight:700;letter-spacing:.12em;color:#8a6d2b">額縁</div>
+      <div class="frame-choices" id="frameChoices">
+        <button class="chip" data-frame="gold">金</button>
+        <button class="chip" data-frame="wood">木</button>
+        <button class="chip" data-frame="black">黒</button>
+        <button class="chip" data-frame="white">白</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lock screen (PIN setup / unlock) -->
+<div class="lockscreen" id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-eyebrow">PRIVATE EXHIBITION</div>
+    <div style="font-size:34px;margin-top:8px">🔒</div>
+    <h2 class="lock-title" id="lockTitle">パスワードを設定</h2>
+    <p class="lock-msg" id="lockMsg"></p>
+    <input id="pinInput" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocapitalize="off" maxlength="6" aria-label="数字6桁のパスワード">
+    <p class="lock-error" id="lockError"></p>
+    <p class="lockout-note" id="lockoutNote"></p>
+    <button class="btn primary lock-btn" id="pinSubmit" disabled>次へ</button>
+    <br>
+    <button class="lock-reset" id="pinReset">パスワードを忘れた場合（データをすべて消して作り直す）</button>
+  </div>
+</div>
+
+<!-- PLACE reset: clear photos of current PLACE only -->
+<div class="overlay" id="placeResetOverlay" style="z-index:105">
+  <div class="modal">
+    <h3>このPLACEをリセットしますか？</h3>
+    <p id="placeResetText"></p>
+    <ul class="reset-list">
+      <li>消えるもの：このPLACEの中の写真すべて</li>
+      <li>残るもの：PLACE自体と名前、他のPLACE、パスワード（PIN）</li>
+    </ul>
+    <p style="font-weight:700;color:#b91c1c">削除すると元に戻せません。</p>
+    <div class="row">
+      <button class="btn danger" id="confirmPlaceReset" style="background:#b91c1c;color:#fff;border-color:#b91c1c">このPLACEの写真をすべて削除</button>
+      <button class="btn" data-close="placeResetOverlay">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- Full reset step 1 -->
+<div class="overlay" id="resetOverlay" style="z-index:110">
+  <div class="modal">
+    <h3>すべてリセットしますか？（確認 1/2）</h3>
+    <p id="fullResetText1">この端末に保存されたアルバムを初期化します。</p>
+    <ul class="reset-list">
+      <li>消えるもの：すべてのPLACE、すべての写真、設定したパスワード（PIN）</li>
+      <li>消えるもの：失敗回数・一時ロックなどのセキュリティ記録</li>
+      <li>残るもの：このページ自体（空の状態で開けます）</li>
+    </ul>
+    <p style="font-weight:700;color:#b91c1c">削除すると元に戻せません。必要な写真は先に控えてください。</p>
+    <div class="row">
+      <button class="btn danger" id="fullResetNext" style="background:#b91c1c;color:#fff;border-color:#b91c1c">内容を理解して次へ</button>
+      <button class="btn" data-close="resetOverlay">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- Full reset step 2 -->
+<div class="overlay" id="resetStep2Overlay" style="z-index:111">
+  <div class="modal">
+    <h3>最終確認（確認 2/2）</h3>
+    <p>本当にすべて削除します。確認のため、下の欄に <b>リセット</b> と入力してください。</p>
+    <label>確認文字</label>
+    <input type="text" id="resetWordInput" class="reset-word" placeholder="リセット" autocomplete="off">
+    <p class="lockout-note" id="resetWordError"></p>
+    <div class="row">
+      <button class="btn danger" id="confirmReset" disabled style="background:#b91c1c;color:#fff;border-color:#b91c1c;opacity:.45">すべて削除して初期化する</button>
+      <button class="btn" data-close="resetStep2Overlay">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- Privacy veil: shown while the tab/app is in the background -->
+<div class="privacy-veil" id="privacyVeil">
+  <div><div style="font-size:36px">🔒</div><p style="font-family:'Noto Serif JP',serif;font-size:18px;margin:10px 0 4px">プライベート展示中</p><p style="font-size:13px;color:rgba(255,255,255,.75);margin:0">画面を離れている間、写真は隠されています</p></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// History hygiene: photo data is never put in the URL. Strip any query/hash so
+// nothing extra is left in the browser history entry for this page.
+try{ if(location.search || location.hash){ history.replaceState(null,'',location.pathname); } }catch(e){}
+let places = [
+  { id: 'p1', name: 'PLACE 1', photos: [] }
+];
+let currentId = 'p1';
+let currentPhotoIndex = -1;
+let pendingDeletePhotoId = null;
+
+const placeBar = document.getElementById('placeBar');
+const wallContent = document.getElementById('wallContent');
+const wallTitle = document.getElementById('wallTitle');
+const wallKicker = document.getElementById('wallKicker');
+const wallCount = document.getElementById('wallCount');
+const toastEl = document.getElementById('toast');
+
+let toastTimer=null;
+function toast(msg){ toastEl.textContent=msg; toastEl.style.display='block'; if(toastTimer) clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.style.display='none', Math.min(6000, 2200 + msg.length*60)); }
+function currentPlace(){ return places.find(p=>p.id===currentId); }
+
+function renderPlaceBar(){
+  placeBar.innerHTML='';
+  places.forEach(p=>{
+    const b=document.createElement('button');
+    b.className='place-tab'+(p.id===currentId?' active':'');
+    b.innerHTML = `<span>${escapeHtml(p.name)}</span>`;
+    b.onclick=()=>{ currentId=p.id; renderAll(); queueSave(); };
+    placeBar.appendChild(b);
+  });
+  const add=document.createElement('button');
+  add.className='add-place'; add.textContent='+'; add.title='PLACEを追加';
+  add.setAttribute('aria-label','PLACEを追加');
+  add.onclick=()=>{
+    document.getElementById('newPlaceName').value = 'PLACE ' + (places.length+1);
+    openOverlay('addPlaceOverlay');
+  };
+  placeBar.appendChild(add);
+}
+
+function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function renderWall(){
+  const place=currentPlace();
+  wallTitle.textContent=place.name;
+  wallKicker.textContent=place.name;
+  wallCount.textContent = place.photos.length + '点 展示中';
+  if(place.photos.length===0){
+    wallContent.innerHTML=`<div class="empty"><div class="big">🖼️</div><h3>まだ何も飾られていません</h3><p>写真をコピーして、上の「ここに貼る」枠を長押し→「ペースト」してください（パソコンは Ctrl+V / ⌘V）。貼った写真はここに額縁入りで1枚ずつ並びます。</p></div>`;
+    return;
+  }
+  const grid=document.createElement('div'); grid.className='grid';
+  place.photos.forEach((ph,idx)=>{
+    const card=document.createElement('div'); card.className='frame-card';
+    card.innerHTML=`
+      <div class="spot"><i></i></div>
+      <button class="del-x" aria-label="削除">×</button>
+      <div class="frame ${ph.frame}">
+        <div class="mat"><img src="${ph.src}" alt="${escapeHtml(ph.title||'写真')}"></div>
+      </div>
+      <div class="plate"><span>EXHIBIT ${String(idx+1).padStart(2,'0')}</span><b>${escapeHtml(ph.title||'無題')}</b></div>
+    `;
+    card.querySelector('.frame').onclick=()=>openLightbox(idx);
+    card.querySelector('.del-x').onclick=(e)=>{ e.stopPropagation(); askDelete(ph.id); };
+    grid.appendChild(card);
+  });
+  wallContent.innerHTML=''; wallContent.appendChild(grid);
+}
+
+function renderAll(){ renderPlaceBar(); renderWall(); }
+
+function openOverlay(id){ document.getElementById(id).classList.add('open'); }
+function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeOverlay(b.dataset.close));
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
+
+// Add place
+document.getElementById('confirmAddPlace').onclick=()=>{
+  const name=document.getElementById('newPlaceName').value.trim() || ('PLACE '+(places.length+1));
+  const id='p'+Date.now();
+  places.push({id, name, photos:[]}); currentId=id;
+  closeOverlay('addPlaceOverlay'); renderAll(); queueSave(); toast(name+' を作りました');
+};
+
+// Rename
+document.getElementById('renamePlaceBtn').onclick=()=>{ document.getElementById('renameInput').value=currentPlace().name; openOverlay('renameOverlay'); };
+document.getElementById('confirmRename').onclick=()=>{ const v=document.getElementById('renameInput').value.trim(); if(v) currentPlace().name=v; closeOverlay('renameOverlay'); renderAll(); queueSave(); };
+
+// Delete place
+document.getElementById('deletePlaceBtn').onclick=()=>{
+  if(places.length<=1){ toast('最後のPLACEは削除できません'); return; }
+  document.getElementById('delPlaceText').textContent=`「${currentPlace().name}」と中の写真 ${currentPlace().photos.length}点 をすべて削除します。元に戻せません。`;
+  openOverlay('delPlaceOverlay');
+};
+document.getElementById('confirmDelPlace').onclick=()=>{
+  places=places.filter(p=>p.id!==currentId); currentId=places[0].id; closeOverlay('delPlaceOverlay'); renderAll(); queueSave(); toast('PLACEを削除しました');
+};
+
+// Image handling
+function processFile(file){
+  return new Promise((resolve)=>{
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{
+      const max=1600; let w=img.naturalWidth, h=img.naturalHeight;
+      const scale=Math.min(1, max/Math.max(w,h)); w=Math.round(w*scale); h=Math.round(h*scale);
+      const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg',0.86));
+    };
+    img.onerror=()=>{ // fallback read as dataurl
+      const r=new FileReader(); r.onload=()=>resolve(r.result); r.readAsDataURL(file);
+    };
+    img.src=url;
+  });
+}
+function pushPhoto(src){
+  currentPlace().photos.push({id:'ph'+Date.now()+Math.random().toString(16).slice(2), src, title:'', frame:'gold'});
+}
+async function addImages(files){
+  const imgs=[...files].filter(f=>!f.type || f.type.startsWith('image/'));
+  if(!imgs.length){ toast('画像が見つかりませんでした'); return; }
+  for(const f of imgs){
+    const src=await processFile(f);
+    pushPhoto(src);
+  }
+  renderAll(); queueSave(); toast(imgs.length+'枚を飾りました');
+}
+// Downscale a data: URL image (used when iOS inserts the pasted image directly as an <img>)
+function processDataUrl(dataUrl){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const max=1600; let w=img.naturalWidth, h=img.naturalHeight;
+        if(!w || !h){ resolve(dataUrl); return; }
+        const scale=Math.min(1, max/Math.max(w,h)); w=Math.max(1,Math.round(w*scale)); h=Math.max(1,Math.round(h*scale));
+        const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(c.toDataURL('image/jpeg',0.86));
+      }catch(e){ resolve(dataUrl); }
+    };
+    img.onerror=()=>resolve(dataUrl);
+    img.src=dataUrl;
+  });
+}
+// Extract image files from a paste event's clipboardData (files list, items, or HTML with <img>)
+function collectPasteFiles(cd){
+  let files=[];
+  if(!cd) return files;
+  if(cd.files && cd.files.length) files=[...cd.files].filter(f=>!f.type || f.type.startsWith('image/'));
+  if(!files.length && cd.items){
+    for(const it of cd.items){ if(it.kind==='file' && it.type.startsWith('image/')){ const f=it.getAsFile(); if(f) files.push(f); } }
+  }
+  return files;
+}
+async function addImagesFromHtml(html){
+  if(!html || !/<img/i.test(html)) return 0;
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  let added=0;
+  for(const im of doc.querySelectorAll('img')){
+    const src=im.getAttribute('src')||'';
+    try{
+      if(src.startsWith('data:image')){ pushPhoto(await processDataUrl(src)); added++; }
+      else if(src.startsWith('blob:')){
+        // blob: URLs from another document are not fetchable cross-document; try anyway
+        const r=await fetch(src); const b=await r.blob();
+        if(b.type.startsWith('image/')){ pushPhoto(await processFile(new File([b],'pasted',{type:b.type}))); added++; }
+      }
+    }catch(e){ /* remote/blob images that cannot be read are skipped */ }
+  }
+  if(added){ renderAll(); queueSave(); }
+  return added;
+}
+
+document.addEventListener('paste', async (e)=>{
+  if(e.target && e.target.id==='pasteTarget') return; // handled by the paste-target handler
+  const files=collectPasteFiles(e.clipboardData);
+  if(files.length){ e.preventDefault(); addImages(files); return; }
+  const html=e.clipboardData && e.clipboardData.getData ? e.clipboardData.getData('text/html') : '';
+  if(html && /<img/i.test(html)){
+    const added=await addImagesFromHtml(html);
+    if(added) e.preventDefault();
+  }
+});
+
+// --- Dedicated paste target: the reliable path on iPhone/iPad Safari ---
+// iOS only shows the long-press "ペースト" menu inside an editable element, and the
+// pasted image is inserted into it as an <img> (blob:/data:) rather than delivered
+// as a file. So we watch the target and harvest any <img> that appears inside it.
+const pasteTarget=document.getElementById('pasteTarget');
+let harvesting=false;
+async function harvestPasteTarget(){
+  if(harvesting || !pasteTarget) return;
+  const imgs=[...pasteTarget.querySelectorAll('img')];
+  if(!imgs.length) return;
+  harvesting=true;
+  let added=0;
+  for(const im of imgs){
+    const src=im.getAttribute('src')||'';
+    try{
+      if(src.startsWith('data:image')){ pushPhoto(await processDataUrl(src)); added++; }
+      else if(src.startsWith('blob:')){
+        const r=await fetch(src); const b=await r.blob();
+        const file=new File([b],'pasted-image',{type:b.type||'image/png'});
+        pushPhoto(await processFile(file)); added++;
+      }
+    }catch(err){ /* unreadable pasted image: skip it */ }
+  }
+  pasteTarget.innerHTML='';
+  harvesting=false;
+  if(added){ renderAll(); queueSave(); toast(added+'枚を飾りました'); }
+  else toast('画像を読み取れませんでした。「写真ライブラリから選ぶ」も試してください');
+}
+if(pasteTarget){
+  pasteTarget.addEventListener('paste',(e)=>{
+    const files=collectPasteFiles(e.clipboardData);
+    if(files.length){ e.preventDefault(); addImages(files); setTimeout(()=>{ pasteTarget.innerHTML=''; },0); return; }
+    // No files: iOS will insert the image into the element; harvest right after.
+    setTimeout(harvestPasteTarget, 120);
+  });
+  pasteTarget.addEventListener('input',()=>setTimeout(harvestPasteTarget, 60));
+  new MutationObserver(()=>setTimeout(harvestPasteTarget, 60)).observe(pasteTarget,{childList:true,subtree:true});
+}
+
+document.getElementById('fileInput').addEventListener('change',e=>{ addImages(e.target.files); e.target.value=''; });
+const dz=document.getElementById('dropZone');
+['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault(); dz.style.background='#ffe9a8';}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault(); dz.style.background='';}));
+dz.addEventListener('drop',e=>{ if(e.dataTransfer.files.length) addImages(e.dataTransfer.files); });
+document.getElementById('wall').addEventListener('dragover',e=>e.preventDefault());
+document.getElementById('wall').addEventListener('drop',e=>{ e.preventDefault(); if(e.dataTransfer.files.length) addImages(e.dataTransfer.files); });
+
+// Delete photo
+function askDelete(photoId){
+  const place=currentPlace(); const ph=place.photos.find(p=>p.id===photoId); if(!ph) return;
+  pendingDeletePhotoId=photoId;
+  document.getElementById('deleteThumb').src=ph.src;
+  document.getElementById('deleteTitle').textContent=ph.title||'無題';
+  openOverlay('deleteOverlay');
+}
+document.getElementById('confirmDeleteBtn').onclick=()=>{
+  const place=currentPlace(); place.photos=place.photos.filter(p=>p.id!==pendingDeletePhotoId);
+  closeOverlay('deleteOverlay'); closeLightbox(); renderAll(); queueSave(); toast('写真を削除しました');
+};
+
+// Lightbox
+const lb=document.getElementById('lightbox');
+const lbEditPanel=document.getElementById('lbEditPanel');
+const lbEditBtn=document.getElementById('lbEdit');
+function setEditMode(on){
+  lbEditPanel.classList.toggle('open', on);
+  lbEditBtn.classList.toggle('active', on);
+  lbEditBtn.textContent = on ? '✎ 編集中' : '✎ 編集';
+}
+function openLightbox(idx){
+  currentPhotoIndex=idx; setEditMode(false); updateLb(); lb.classList.add('open'); document.body.style.overflow='hidden';
+}
+function closeLightbox(){ lb.classList.remove('open'); document.body.style.overflow=''; setEditMode(false); }
+lbEditBtn.onclick=()=>setEditMode(!lbEditPanel.classList.contains('open'));
+document.getElementById('lbEditDone').onclick=()=>setEditMode(false);
+function updateLb(){
+  const place=currentPlace(); const ph=place.photos[currentPhotoIndex]; if(!ph) return;
+  document.getElementById('lbImg').src=ph.src;
+  document.getElementById('lbTitle').value=ph.title||'';
+  document.getElementById('lbCounter').textContent=place.name+'  —  '+(currentPhotoIndex+1)+' / '+place.photos.length;
+  document.querySelectorAll('#frameChoices .chip').forEach(c=>c.classList.toggle('active', c.dataset.frame===ph.frame));
+}
+document.getElementById('lbClose').onclick=closeLightbox;
+document.getElementById('lbPrev').onclick=()=>{ const n=currentPlace().photos.length; currentPhotoIndex=(currentPhotoIndex-1+n)%n; setEditMode(false); updateLb(); };
+document.getElementById('lbNext').onclick=()=>{ const n=currentPlace().photos.length; currentPhotoIndex=(currentPhotoIndex+1)%n; setEditMode(false); updateLb(); };
+document.getElementById('lbTitle').addEventListener('input',e=>{ const ph=currentPlace().photos[currentPhotoIndex]; if(ph){ ph.title=e.target.value; renderWall(); queueSave(); }});
+document.getElementById('frameChoices').addEventListener('click',e=>{ const btn=e.target.closest('[data-frame]'); if(!btn) return; const ph=currentPlace().photos[currentPhotoIndex]; if(ph){ ph.frame=btn.dataset.frame; updateLb(); renderWall(); queueSave(); }});
+document.getElementById('lbDelete').onclick=()=>{ const ph=currentPlace().photos[currentPhotoIndex]; if(ph) askDelete(ph.id); };
+document.addEventListener('keydown',e=>{
+  if(!lb.classList.contains('open')) return;
+  if(e.key==='Escape') closeLightbox();
+  if(e.key==='ArrowLeft') document.getElementById('lbPrev').click();
+  if(e.key==='ArrowRight') document.getElementById('lbNext').click();
+});
+
+// ===== Vault: on-device storage (IndexedDB) encrypted with a PIN-derived key =====
+// The PIN itself is never stored. PBKDF2(PIN, salt) -> AES-GCM key; the whole
+// album state is encrypted before it is written to IndexedDB.
+const IDB_NAME='album-vault-db', IDB_STORE='kv', VAULT_KEY='vault', SEC_KEY='security';
+let cryptoKey=null, vaultSalt=null;
+let pinMode='setup1', pinFirst='';
+// --- Brute-force guard state (counts/timestamps only: no PIN, no photos) ---
+// Stored in its own IndexedDB record so reloading the page cannot reset the
+// lockout. 5 fails -> 30s, further fails -> 2min, then 10min.
+let secState={fails:0, lockoutUntil:0};
+let lockoutTimer=null;
+async function loadSec(){ try{ const s=await idbGet(SEC_KEY); if(s && typeof s.fails==='number') secState=s; }catch(e){} refreshLockoutUi(); }
+async function saveSec(){ try{ await idbSet(SEC_KEY, secState); }catch(e){} }
+function lockoutMsFor(fails){ if(fails>=10) return 10*60*1000; if(fails>=7) return 2*60*1000; if(fails>=5) return 30*1000; return 0; }
+function isLockedOut(){ return secState.lockoutUntil && Date.now() < secState.lockoutUntil; }
+async function registerPinFailure(){
+  secState.fails=(secState.fails||0)+1;
+  const ms=lockoutMsFor(secState.fails);
+  if(ms) secState.lockoutUntil=Date.now()+ms; else secState.lockoutUntil=0;
+  await saveSec(); refreshLockoutUi();
+  return secState.fails;
+}
+async function registerPinSuccess(){ secState={fails:0, lockoutUntil:0}; await saveSec(); refreshLockoutUi(); }
+function refreshLockoutUi(){
+  const note=document.getElementById('lockoutNote');
+  const inp=document.getElementById('pinInput'), btn=document.getElementById('pinSubmit');
+  if(lockoutTimer){ clearInterval(lockoutTimer); lockoutTimer=null; }
+  if(pinMode!=='unlock'){ if(note) note.textContent=''; return; }
+  if(isLockedOut()){
+    if(inp) inp.disabled=true; if(btn) btn.disabled=true;
+    const tick=()=>{
+      const left=Math.max(0, secState.lockoutUntil-Date.now());
+      if(note) note.textContent='試行回数が多いため一時ロック中です。あと '+Math.ceil(left/1000)+' 秒お待ちください。ページを再読み込みしても解除されません。';
+      if(left<=0){ if(lockoutTimer) clearInterval(lockoutTimer); if(inp) inp.disabled=false; refreshLockoutUi(); }
+    };
+    tick(); lockoutTimer=setInterval(tick,500);
+  }else{
+    if(inp) inp.disabled=false;
+    if(note) note.textContent = secState.fails>0 ? ('これまでの失敗：'+secState.fails+'回（5回で一時ロック）') : '';
+    if(inp && btn) btn.disabled = inp.value.length!==6;
+  }
+}
+
+function idbOpen(){ return new Promise((res,rej)=>{ const r=indexedDB.open(IDB_NAME,1); r.onupgradeneeded=()=>{ r.result.createObjectStore(IDB_STORE); }; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function idbGet(key){ const db=await idbOpen(); return new Promise((res,rej)=>{ const q=db.transaction(IDB_STORE,'readonly').objectStore(IDB_STORE).get(key); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }); }
+async function idbSet(key,val){ const db=await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction(IDB_STORE,'readwrite'); tx.objectStore(IDB_STORE).put(val,key); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+async function idbDel(key){ const db=await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction(IDB_STORE,'readwrite'); tx.objectStore(IDB_STORE).delete(key); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+function b64encode(buf){ const b=new Uint8Array(buf); let s=''; for(let i=0;i<b.length;i+=8192){ s+=String.fromCharCode.apply(null, b.subarray(i,i+8192)); } return btoa(s); }
+function b64decode(str){ const s=atob(str); const b=new Uint8Array(s.length); for(let i=0;i<s.length;i++) b[i]=s.charCodeAt(i); return b; }
+async function deriveKey(pin, salt){
+  const base=await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt:salt, iterations:150000, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+let saveChain=Promise.resolve(), saveTimer=null;
+function queueSave(){
+  if(!cryptoKey) return;
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{ saveChain=saveChain.then(doSave).catch(()=>{}); }, 350);
+}
+async function doSave(){
+  if(!cryptoKey || !vaultSalt) return;
+  const plain=new TextEncoder().encode(JSON.stringify({places:places, currentId:currentId}));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, cryptoKey, plain);
+  await idbSet(VAULT_KEY, {salt:b64encode(vaultSalt), iv:b64encode(iv), data:b64encode(ct)});
+}
+
+// --- Auto-lock & privacy veil ---
+// Inactivity (3 min) or leaving the tab/app (30 s in background) locks the
+// album: the key is dropped and all rendered photos are removed from the DOM,
+// so neither the back button nor a borrowed phone can show them afterwards.
+const AUTOLOCK_MS=3*60*1000, HIDDEN_LOCK_MS=30*1000;
+let lastActivity=Date.now(), hiddenAt=0, autoTimer=null;
+function albumVisible(){ const ls=document.getElementById('lockScreen'); return ls && ls.classList.contains('hidden'); }
+function noteActivity(){ lastActivity=Date.now(); }
+['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev, noteActivity, {passive:true}));
+function startAutoLockWatch(){
+  if(autoTimer) clearInterval(autoTimer);
+  autoTimer=setInterval(()=>{
+    if(albumVisible() && cryptoKey && Date.now()-lastActivity>AUTOLOCK_MS){ doLock(); toast('しばらく操作がなかったため自動でロックしました'); }
+  }, 5000);
+}
+function doLock(){
+  try{ closeLightbox(); }catch(e){}
+  cryptoKey=null; pinFirst='';
+  const wc=document.getElementById('wallContent'); if(wc) wc.innerHTML='';
+  const pb=document.getElementById('placeBar'); if(pb) pb.innerHTML='';
+  const li=document.getElementById('lbImg'); if(li) li.removeAttribute('src');
+  const veil=document.getElementById('privacyVeil'); if(veil) veil.classList.remove('show');
+  const ls=document.getElementById('lockScreen'); if(ls) ls.classList.remove('hidden');
+  document.body.style.overflow='';
+  setPinMode('unlock'); loadSec();
+}
+document.addEventListener('visibilitychange', ()=>{
+  const veil=document.getElementById('privacyVeil');
+  if(document.hidden){
+    hiddenAt=Date.now();
+    if(albumVisible() && cryptoKey && veil) veil.classList.add('show');
+  }else{
+    if(veil) veil.classList.remove('show');
+    if(hiddenAt && albumVisible() && cryptoKey && Date.now()-hiddenAt>HIDDEN_LOCK_MS){ doLock(); toast('画面を離れていたため自動でロックしました'); }
+    hiddenAt=0; noteActivity();
+  }
+});
+window.addEventListener('pagehide', ()=>{ if(cryptoKey){ cryptoKey=null; const wc=document.getElementById('wallContent'); if(wc) wc.innerHTML=''; const li=document.getElementById('lbImg'); if(li) li.removeAttribute('src'); } });
+window.addEventListener('pageshow', ()=>{ if(!cryptoKey){ const ls=document.getElementById('lockScreen'); if(ls) ls.classList.remove('hidden'); } });
+
+// --- Lock screen / PIN flow ---
+const lockScreen=document.getElementById('lockScreen');
+const lockTitle=document.getElementById('lockTitle');
+const lockMsg=document.getElementById('lockMsg');
+const lockError=document.getElementById('lockError');
+const pinInput=document.getElementById('pinInput');
+const pinSubmit=document.getElementById('pinSubmit');
+const pinReset=document.getElementById('pinReset');
+
+function setPinMode(mode){
+  pinMode=mode;
+  pinInput.disabled=false;
+  pinInput.value=''; pinSubmit.disabled=true; lockError.textContent='';
+  if(mode==='setup1'){
+    lockTitle.textContent='パスワードを設定';
+    lockMsg.textContent='この端末の中に、写真を暗号化して保存します。まず数字6桁のパスワードを決めてください。パスワード自体は保存されません。忘れると写真は復元できません。';
+    pinSubmit.textContent='次へ';
+    pinReset.classList.remove('show');
+  }else if(mode==='setup2'){
+    lockTitle.textContent='もう一度入力してください';
+    lockMsg.textContent='確認のため、同じ数字6桁をもう一度入力してください。';
+    pinSubmit.textContent='設定して始める';
+    pinReset.classList.remove('show');
+  }else{
+    lockTitle.textContent='パスワードを入力';
+    lockMsg.textContent='数字6桁のパスワードでロックを解除します。写真はこの端末の中に暗号化して保存されています。5回間違えると一時的に入力できなくなります（再読み込みしても解除されません）。';
+    pinSubmit.textContent='開く';
+    pinReset.classList.add('show');
+  }
+  if(typeof refreshLockoutUi==='function') refreshLockoutUi();
+  setTimeout(()=>{ try{ if(!isLockedOut()) pinInput.focus({preventScroll:true}); }catch(e){} }, 60);
+}
+pinInput.addEventListener('input', ()=>{
+  pinInput.value=pinInput.value.replace(/\D/g,'').slice(0,6);
+  pinSubmit.disabled = pinInput.value.length!==6 || (pinMode==='unlock' && isLockedOut());
+  lockError.textContent='';
+  if(pinInput.value.length===6 && pinMode==='unlock'){
+    setTimeout(()=>{ if(pinInput.value.length===6 && !pinSubmit.disabled) pinSubmit.click(); }, 200);
+  }
+});
+pinInput.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && pinInput.value.length===6 && !pinSubmit.disabled){ e.preventDefault(); pinSubmit.click(); }
+});
+function enterAlbum(){
+  lockScreen.classList.add('hidden');
+  noteActivity(); startAutoLockWatch();
+  renderAll();
+}
+pinSubmit.onclick=async()=>{
+  const pin=pinInput.value;
+  if(pin.length!==6) return;
+  if(pinMode==='unlock' && isLockedOut()){ refreshLockoutUi(); return; }
+  pinSubmit.disabled=true; lockError.textContent='';
+  try{
+    if(pinMode==='setup1'){ pinFirst=pin; setPinMode('setup2'); return; }
+    if(pinMode==='setup2'){
+      if(pin!==pinFirst){
+        pinFirst='';
+        setPinMode('setup1');
+        lockError.textContent='1回目と一致しませんでした。もう一度最初から入力してください。';
+        return;
+      }
+      pinFirst='';
+      vaultSalt=crypto.getRandomValues(new Uint8Array(16));
+      cryptoKey=await deriveKey(pin, vaultSalt);
+      places=[{id:'p1', name:'PLACE 1', photos:[]}]; currentId='p1';
+      await doSave();
+      await registerPinSuccess();
+      enterAlbum();
+      toast('パスワードを設定しました。写真はこの端末に暗号化して保存されます');
+      return;
+    }
+    // unlock: a wrong PIN fails AES-GCM authentication, which is how we verify it
+    const rec=await idbGet(VAULT_KEY);
+    if(!rec){ setPinMode('setup1'); return; }
+    const salt=b64decode(rec.salt);
+    const key=await deriveKey(pin, salt);
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:b64decode(rec.iv)}, key, b64decode(rec.data));
+    const data=JSON.parse(new TextDecoder().decode(pt));
+    cryptoKey=key; vaultSalt=salt;
+    places=(data.places && data.places.length) ? data.places : [{id:'p1', name:'PLACE 1', photos:[]}];
+    currentId=(data.currentId && places.some(p=>p.id===data.currentId)) ? data.currentId : places[0].id;
+    await registerPinSuccess();
+    enterAlbum();
+    toast('ロックを解除しました');
+  }catch(e){
+    if(pinMode==='unlock'){
+      pinInput.value=''; pinSubmit.disabled=true;
+      const fails=await registerPinFailure();
+      if(isLockedOut()){ lockError.textContent='パスワードが違います。試行回数が上限に達したため一時ロックしました。'; }
+      else lockError.textContent='パスワードが違います。（失敗 '+fails+' 回／5回で一時ロック）';
+    }else{
+      pinSubmit.disabled=false;
+      lockError.textContent='処理に失敗しました。もう一度お試しください。';
+    }
+  }
+};
+// --- Reset flows ---
+// Full reset (2-step): step 1 explains exactly what is deleted, step 2
+// requires typing リセット before the destructive button enables.
+// Available both from the lock screen (forgot PIN) and after unlocking.
+function openFullReset(){
+  const unlocked=!!cryptoKey;
+  const totalPhotos=places.reduce((a,p)=>a+(p.photos?p.photos.length:0),0);
+  document.getElementById('fullResetText1').textContent = unlocked
+    ? ('現在 '+places.length+' 件のPLACE、写真 '+totalPhotos+' 点が保存されています。すべて初期化します。')
+    : 'ロック中のため件数は表示できませんが、この端末に保存されたすべてのPLACE・写真・パスワード（PIN）が削除されます。';
+  document.getElementById('resetWordInput').value='';
+  document.getElementById('resetWordError').textContent='';
+  document.getElementById('confirmReset').disabled=true;
+  document.getElementById('confirmReset').style.opacity='.45';
+  openOverlay('resetOverlay');
+}
+pinReset.onclick=openFullReset;
+document.getElementById('fullResetBtn').onclick=openFullReset;
+document.getElementById('fullResetNext').onclick=()=>{ closeOverlay('resetOverlay'); openOverlay('resetStep2Overlay'); setTimeout(()=>{ try{document.getElementById('resetWordInput').focus();}catch(e){} },80); };
+document.getElementById('resetWordInput').addEventListener('input',(e)=>{
+  const ok=e.target.value.trim()==='リセット';
+  const btn=document.getElementById('confirmReset');
+  btn.disabled=!ok; btn.style.opacity=ok?'1':'.45';
+  document.getElementById('resetWordError').textContent = (!ok && e.target.value) ? '「リセット」と正確に入力してください。' : '';
+});
+document.getElementById('confirmReset').onclick=async()=>{
+  if(document.getElementById('resetWordInput').value.trim()!=='リセット') return;
+  try{ await idbDel(VAULT_KEY); }catch(e){}
+  try{ await idbDel(SEC_KEY); }catch(e){}
+  secState={fails:0, lockoutUntil:0};
+  cryptoKey=null; vaultSalt=null; pinFirst='';
+  places=[{id:'p1', name:'PLACE 1', photos:[]}]; currentId='p1';
+  try{ closeLightbox(); }catch(e){}
+  wallContent.innerHTML=''; placeBar.innerHTML='';
+  closeOverlay('resetStep2Overlay'); closeOverlay('resetOverlay');
+  lockScreen.classList.remove('hidden');
+  setPinMode('setup1');
+  toast('すべてリセットしました。新しいパスワードを設定してください');
+};
+// PLACE reset: clears only the current PLACE's photos. PLACE itself, its name,
+// other PLACEs and the PIN are kept.
+document.getElementById('resetPlaceBtn').onclick=()=>{
+  const place=currentPlace(); if(!place) return;
+  if(!place.photos.length){ toast('このPLACEには写真がありません'); return; }
+  document.getElementById('placeResetText').textContent='「'+place.name+'」の中の写真 '+place.photos.length+' 点をすべて削除して空にします。';
+  openOverlay('placeResetOverlay');
+};
+document.getElementById('confirmPlaceReset').onclick=()=>{
+  const place=currentPlace(); if(!place) return;
+  place.photos=[];
+  closeOverlay('placeResetOverlay'); try{ closeLightbox(); }catch(e){}
+  renderAll(); queueSave(); toast('「'+place.name+'」をリセットしました（写真のみ削除、PLACEとパスワードは残ります）');
+};
+document.getElementById('lockBtn').onclick=()=>{ doLock(); };
+
+async function initVault(){
+  if(!window.crypto || !crypto.subtle || !window.indexedDB){
+    lockTitle.textContent='このブラウザでは使えません';
+    lockMsg.textContent='暗号化（Web Crypto）と端末内保存（IndexedDB）が必要です。HTTPSのページで、通常モード（プライベートブラウズ以外）で開いてください。';
+    pinInput.style.display='none'; pinSubmit.style.display='none';
+    return;
+  }
+  try{
+    const rec=await idbGet(VAULT_KEY);
+    await loadSec();
+    setPinMode(rec ? 'unlock' : 'setup1');
+  }catch(e){
+    setPinMode('setup1');
+    lockError.textContent='保存領域を開けませんでした。プライベートブラウズでは保存できないことがあります。';
+  }
+}
+initVault();
+</script>
+</body>
+</html>
